@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>BratAI + GPT</title>
+    <style>
+        body { font-family: sans-serif; background-color: #111; color: #eee; margin: 0; padding: 20px; }
+        #chat { height: 400px; overflow-y: auto; border: 1px solid #444; padding: 10px; margin-bottom: 10px; background: #1c1c1c; }
+        .msg { margin: 5px 0; }
+        .user { color: #4fc3f7; }
+        .brat { color: #f44336; }
+        .gpt { color: #81c784; }
+        input, button { font-size: 16px; padding: 10px; margin-top: 5px; }
+        button { background: #4fc3f7; color: #000; border: none; cursor: pointer; }
+        button:hover { background: #29b6f6; }
+    </style>
+</head>
+<body>
+    <h2>💢 BratAI + 🤖 GPT</h2>
+    <div id="chat"></div>
+    <input type="text" id="userInput" placeholder="Напиши что-нибудь..." style="width: 70%;">
+    <button onclick="sendMessage()">Отправить</button>
+
+    <script>
+        const bratPhrases = [
+            "Ты жалок.",
+            "Неужели ты снова здесь?",
+            "Как же ты надоел, смертный.",
+            "Твоя глупость поражает.",
+            "Уйди, пока я не разозлился."
+        ];
+
+        const DEEPSEEK_API_KEY = "sk-606295df7fab415cab397a0a1a4977c0";
+
+        function bratReply() {
+            return bratPhrases[Math.floor(Math.random() * bratPhrases.length)];
+        }
+
+        async function gptReply(userText) {
+            try {
+                const response = await fetch("https://api.deepseek.com/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + DEEPSEEK_API_KEY
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [{ role: "user", content: userText }]
+                    })
+                });
+
+                const data = await response.json();
+                return data.choices?.[0]?.message?.content || "GPT: Нет ответа";
+            } catch (error) {
+                return "GPT: Ошибка соединения";
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const chat = document.getElementById('chat');
+            const userText = input.value.trim();
+            if (!userText) return;
+
+            chat.innerHTML += `<div class='msg user'><strong>Ты:</strong> ${userText}</div>`;
+            input.value = "";
+
+            // BratAI ответ
+            setTimeout(() => {
+                const reply = bratReply();
+                chat.innerHTML += `<div class='msg brat'><strong>BratAI:</strong> ${reply}</div>`;
+                chat.scrollTop = chat.scrollHeight;
+            }, 300);
+
+            // GPT ответ
+            const gptText = await gptReply(userText);
+            chat.innerHTML += `<div class='msg gpt'><strong>GPT:</strong> ${gptText}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
